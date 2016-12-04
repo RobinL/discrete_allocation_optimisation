@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    
+      <link href="css/leaflet.css" rel="stylesheet"/>
+
+    <link href="css/style.css" rel="stylesheet"/>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+
+    <div id='map'>
+    </div>
+
+    <div class="padded_options">
+     
+      <div class=flex_parent>
+
+        <div class="flex_item">
+        <label>Change point size</label>
+          <input type="number" id="input_point_size" value="2"/>
+        </div>
+
+          <div class="flex_item">
+        <label>Change line thickness</label>
+          <input type="number" id="input_line_thickness" value="10"/>
+        </div>
+
+        <div class="flex_item">
+        <label>Toggle basemap</label>
+          <button id="toggle_basemap">Toggle</button>
+        </div>
+
+        <div class="flex_item">
+        <label>Opacity of cells</label>
+          <input type="number" id="cell_opacity_input" value="0.8", step="0.1"/>
+        </div>
+
+        <div class="flex_item">
+        <label>Change prison capacity:</label>
+          <select name="prison_capacity_options" id="prison_capacity_options">
+              </select>
+          <input type="number" id="prison_capacity_value" value="", step="50"/>
+        </div>
+
+        <div class="flex_item">
+        <label>Choose input data:</label>
+          <select name="data_csv_select" id="data_csv_select">
+          </select>
+        </div>
+        <div class="flex_item">
+        <label>Choose estate option:</label>
+              <select name="prison_estate_options" id="prison_estate_options">
+              </select>
+
+        </div>
+        <div class="flex_item">
+        <label>Change num iterations:</label>
+          <input type="number" id="num_iterations_1"  step="1", value="3"/>
+          <input type="number" id="num_iterations_2"  step="1", value="1"/>
+        </div>
+
+  
+
+    
+      </div>
+    </div>
+   
+   <div id='hover_panel'>
+      <h3>Hover over areas to display statistics</h3>
+    </div>
+
+
+    
+    <script src="js/third_party/leaflet.js"></script>
+    <script src="js/third_party/d3.min.js"></script>
+    <script src="js/third_party/topojson.v1.min.js"></script>
+    <script src="js/third_party/underscore.js"></script>
+    <script src="js/third_party/jquery.js"></script>
+    <script src="js/third_party/handlebars-v4.0.5.js"></script>
+
+    <!-- <script src="data/csv_data.js"></script> -->
+    <!-- <script src="topojson/uk_boundaries.js"></script> -->
+    <script src="js/custom_code/namespace.js"></script>
+    <script src="js/custom_code/utils.js"></script>
+    <script src="js/custom_code/settings.js"></script>
+    <script src="js/custom_code/map.js"></script>
+    <script src="js/custom_code/points_map.js"></script>
+    <script src="js/custom_code/voronoi_map.js"></script>
+
+    <script src="js/custom_code/map_keys.js"></script>
+    <script src="js/custom_code/little_line_chart.js"></script>
+
+    <script src="js/custom_code/process_csv.js"></script>
+    <script src="js/custom_code/dataholder.js"></script>
+    <script src="js/custom_code/main.js"></script>
+
+
+
+
+    <script id="hp_info" type="text/x-handlebars-template">
+      <div class="entry">
+        <div>
+          <h2 class="overall_stats">Overall statistics</h2> 
+          <table class="overall_stats">
+          <tr>
+          <td class="overall_stats">Overall average travel time (minutes):</td><td> {{overall_average_duration}}</td>
+          </tr>
+          <tr class="detail_stats">
+          <td class="overall_stats">Overall demand assigned:</td><td> {{total_demand_assigned}}</td>
+          </tr>
+          <tr class="detail_stats">
+          <td class="overall_stats">Overall demand unassigned:</td><td> {{total_demand_unassigned}}</td>
+        </tr>
+          <tr>
+          <td class="overall_stats">Number of prisons active:</td><td> {{number_of_active_prisons}}</td>
+          
+
+          </tr>
+          </table>
+ 
+        
+
+          <h4 class="threshold_stats">Courts within travel time thresholds:</h4>
+          <div class="threshold_stats">
+          <table>
+          {{#each overall_thesholds}}
+          <tr>
+          <td>Courts within {{this.threshold}} minutes of a prison:</td>
+          <td> {{this.percentage_under_threshold}}</td></tr>
+          {{/each}}
+          </table>
+           
+          </div>
+      
+          <h2 class="prison_stats">This prison statistics</h2> 
+          
+          
+          <table class="prison_stats">
+         
+            <tr class="prison_stats">
+              <td>This prison name:</td>
+              <td> {{dest_prison}}</td>
+            </tr>
+            <tr class="prison_stats">
+              <td>This prison capacity:</td>
+              <td> {{prison_capacity}}</td>
+            </tr>
+            <tr class="prison_stats">
+              <td>Capacity in use:</td>
+              <td> {{capacity_in_use}}</td>
+            </tr>
+            <tr class="prison_stats detail_stats">
+              <td>Average distance to this prison:</td>
+              <td> {{this_prison_average_distance}}</td>
+            </tr>
+            <tr class="prison_stats">
+              <td>Average travel time to this prison:</td>
+              <td> {{this_prison_average_duration}}</td>
+            </tr>
+            <tr class="prison_stats detail_stats">
+              <td>Total courts assigned to this prison:</td>
+              <td> {{count_of_allocated_courts}}</td>
+            </tr>
+            <tr class="prison_stats detail_stats">
+              <td>Total demand from catchment area courts if no capacity constraint:</td>
+              <td> {{total_catchment_closest}}</td>
+            </tr>
+          </table>
+
+
+         
+          <h4 class="threshold_stats">Courts within travel time thresholds</h4>
+          <div class="threshold_stats">
+          <table>
+          {{#each this_prison_thresholds}}
+          <tr>
+          <td>Courts within {{this.threshold}} minutes of this prison:</td>
+          <td> {{this.percentage_under_threshold}}</td></tr>
+          {{/each}}
+          </table>
+           
+          </div>
+
+
+          <h2 class="court_stats">This court statistics</h2>
+          <table class="court_stats">
+          <tr class="court_stats"><td>This court:</td><td> {{court_name}}</td></tr>
+          <tr class="court_stats"><td>Drive duration to this prison from court:</td><td> {{court_duration}}</td></tr>
+          <tr class="court_stats detail_stats"><td>Distance to this prison from court:</td><td>{{court_distance}}</td></tr>
+          <tr class="court_stats"><td>Demand from this court:</td><td>{{court_demand}}</td></tr>
+          <tr class="court_stats detail_stats"><td>Amount of demand from this court unassigned:</td><td> {{unassigned_demand}}</td></tr>
+          </table>
+          <br>
+          <button id="toggle_overall_stats" toggle="overall_stats">Toggle overall stats</button>
+          <button id="toggle_prison_stats">Toggle prison stats</button>
+          <button id="toggle_court_stats">Toggle court stats</button>
+                    <br>
+
+          <button id="toggle_detail_stats">Toggle extra details</button>
+          <button id="toggle_threshold_stats">Toggle thresholds</button>
+         
+        </div>
+        <p></p>
+      </div>
+    </script>
+
+
+
+
+  </body>
+</html>
